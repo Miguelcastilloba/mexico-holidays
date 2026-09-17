@@ -57,22 +57,35 @@ test("isBusinessDay excludes weekends and federal holidays", () => {
   assert.equal(isBusinessDay("2027-02-05"), true);
 });
 
-test("isBusinessDay can treat Sundays as business days", () => {
+test("isBusinessDay allows customizing weekend days", () => {
   assert.equal(
-    isBusinessDay("2027-02-07", { sundayIsBusinessDay: true }),
-    true
-  );
-  assert.equal(
-    isBusinessDay("2027-02-06", { sundayIsBusinessDay: true }),
+    isBusinessDay("2027-02-06", { weekendDays: ["saturday"] }),
     false
   );
   assert.equal(
-    isBusinessDay("2027-12-26", { sundayIsBusinessDay: true }),
+    isBusinessDay("2027-02-07", { weekendDays: ["saturday"] }),
     true
   );
   assert.equal(
-    isBusinessDay("2023-01-01", { sundayIsBusinessDay: true }),
+    isBusinessDay("2027-02-06", { weekendDays: ["sunday"] }),
+    true
+  );
+  assert.equal(
+    isBusinessDay("2027-02-07", { weekendDays: ["sunday"] }),
     false
+  );
+  assert.equal(
+    isBusinessDay("2027-02-07", { weekendDays: ["saturday", "sunday"] }),
+    false
+  );
+  assert.equal(isBusinessDay("2027-02-07", { weekendDays: [] }), true);
+  assert.equal(isBusinessDay("2023-01-01", { weekendDays: [] }), false);
+});
+
+test("weekendDays rejects unsupported day names", () => {
+  assert.throws(
+    () => isBusinessDay("2027-02-07", { weekendDays: ["friday"] }),
+    /weekendDays must be an array/
   );
 });
 

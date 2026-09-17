@@ -2,6 +2,11 @@
 
 const MEXICO_CITY_TIME_ZONE = "America/Mexico_City";
 const PRESIDENTIAL_TRANSITION_BASE_YEAR = 2024;
+const WEEKDAY_NUMBERS = {
+  sunday: 0,
+  saturday: 6
+};
+const DEFAULT_WEEKEND_DAYS = ["saturday", "sunday"];
 
 function assertValidYear(year) {
   if (!Number.isInteger(year) || year < 1 || year > 9999) {
@@ -157,18 +162,29 @@ function isHoliday(date) {
   return getHolidayDates(parts.year).some((holiday) => holiday.date === key);
 }
 
+function getWeekendDays(options) {
+  const weekendDays = options.weekendDays ?? DEFAULT_WEEKEND_DAYS;
+
+  if (
+    !Array.isArray(weekendDays) ||
+    weekendDays.some((day) => !Object.hasOwn(WEEKDAY_NUMBERS, day))
+  ) {
+    throw new TypeError(
+      'weekendDays must be an array containing only "saturday" and "sunday"'
+    );
+  }
+
+  return new Set(weekendDays.map((day) => WEEKDAY_NUMBERS[day]));
+}
+
 function isBusinessDay(date, options = {}) {
   const parts = parseDateParts(date);
   const weekday = new Date(
     Date.UTC(parts.year, parts.month - 1, parts.day)
   ).getUTCDay();
-  const sundayIsBusinessDay = options.sundayIsBusinessDay === true;
+  const weekendDays = getWeekendDays(options);
 
-  return (
-    (weekday !== 0 || sundayIsBusinessDay) &&
-    weekday !== 6 &&
-    !isHoliday(date)
-  );
+  return !weekendDays.has(weekday) && !isHoliday(date);
 }
 
 module.exports = {
