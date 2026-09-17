@@ -33,6 +33,8 @@ getHolidays(2027);
 isHoliday("2027-02-01"); // true
 isBusinessDay("2027-02-01"); // false
 isBusinessDay("2027-02-02"); // true
+isBusinessDay("2027-02-06", { weekendDays: ["saturday"] }); // false
+isBusinessDay("2027-02-07", { weekendDays: ["saturday"] }); // true
 
 // Include the customary Holy Week closures in addition to federal holidays.
 getHolidays(2027, { includeHolyWeek: true });
@@ -42,6 +44,11 @@ isBusinessDay("2027-03-26", { includeHolyWeek: true }); // false
 
 The functions accept either a `YYYY-MM-DD` string or a JavaScript `Date`.
 Date-only strings are interpreted as calendar dates. `Date` values are converted using `America/Mexico_City`.
+By default, Saturdays and Sundays are not business days. Pass a `weekendDays`
+array to `isBusinessDay` to customize this: use `["saturday"]` for Saturdays
+only, `["sunday"]` for Sundays only, or `["saturday", "sunday"]` for both.
+An empty array makes both days business days. Federal holidays still take
+precedence.
 
 ## Included holidays
 

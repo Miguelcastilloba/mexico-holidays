@@ -52,6 +52,13 @@ test("Holy Week can be included as an optional customary closure", () => {
     isBusinessDay("2026-04-03", { includeHolyWeek: true }),
     false
   );
+  assert.equal(
+    isBusinessDay("2026-04-04", {
+      includeHolyWeek: true,
+      weekendDays: []
+    }),
+    false
+  );
 });
 
 test("the presidential transition holiday occurs every six years", () => {
@@ -71,7 +78,40 @@ test("isBusinessDay excludes weekends and federal holidays", () => {
   assert.equal(isBusinessDay("2027-02-01"), false);
   assert.equal(isBusinessDay("2027-02-02"), true);
   assert.equal(isBusinessDay("2027-02-06"), false);
+  assert.equal(isBusinessDay("2027-02-07"), false);
   assert.equal(isBusinessDay("2027-02-05"), true);
+});
+
+test("isBusinessDay allows customizing weekend days", () => {
+  assert.equal(
+    isBusinessDay("2027-02-06", { weekendDays: ["saturday"] }),
+    false
+  );
+  assert.equal(
+    isBusinessDay("2027-02-07", { weekendDays: ["saturday"] }),
+    true
+  );
+  assert.equal(
+    isBusinessDay("2027-02-06", { weekendDays: ["sunday"] }),
+    true
+  );
+  assert.equal(
+    isBusinessDay("2027-02-07", { weekendDays: ["sunday"] }),
+    false
+  );
+  assert.equal(
+    isBusinessDay("2027-02-07", { weekendDays: ["saturday", "sunday"] }),
+    false
+  );
+  assert.equal(isBusinessDay("2027-02-07", { weekendDays: [] }), true);
+  assert.equal(isBusinessDay("2023-01-01", { weekendDays: [] }), false);
+});
+
+test("weekendDays rejects unsupported day names", () => {
+  assert.throws(
+    () => isBusinessDay("2027-02-07", { weekendDays: ["friday"] }),
+    /weekendDays must be an array/
+  );
 });
 
 test("invalid inputs produce useful errors", () => {
