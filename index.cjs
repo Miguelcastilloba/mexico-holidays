@@ -31,6 +31,52 @@ function nthWeekdayOfMonth(year, month, weekday, occurrence) {
   return dateKey(year, month, day);
 }
 
+function getEasterSunday(year) {
+  // Gregorian computus (Meeus/Jones/Butcher), using only integer arithmetic.
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+
+  return { month, day };
+}
+
+function normalizeOptions(options) {
+  if (options === undefined) {
+    options = {};
+  }
+
+  if (
+    options === null ||
+    typeof options !== "object" ||
+    Array.isArray(options)
+  ) {
+    throw new TypeError("options must be an object");
+  }
+
+  if (
+    options.includeHolyWeek !== undefined &&
+    typeof options.includeHolyWeek !== "boolean"
+  ) {
+    throw new TypeError("options.includeHolyWeek must be a boolean");
+  }
+
+  return {
+    includeHolyWeek: options.includeHolyWeek === true,
+    weekendDays: getWeekendDays(options)
+  };
+}
+
 function parseDateOnlyString(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
 
@@ -81,8 +127,9 @@ function parseDateParts(date) {
   };
 }
 
-function getHolidayDates(year) {
+function getHolidayDates(year, options) {
   assertValidYear(year);
+  const normalizedOptions = normalizeOptions(options);
 
   const holidays = [];
 
@@ -141,6 +188,25 @@ function getHolidayDates(year) {
 
   addHoliday("12-25", "Christmas Day", "Navidad", "Article 74(VIII)");
 
+  if (normalizedOptions.includeHolyWeek) {
+    const easterSunday = getEasterSunday(year);
+
+    holidays.push(
+      {
+        date: dateKey(year, easterSunday.month, easterSunday.day - 2),
+        name: "Good Friday",
+        nameEs: "Viernes Santo",
+        legalReference: "Customary closure (not Article 74)"
+      },
+      {
+        date: dateKey(year, easterSunday.month, easterSunday.day - 1),
+        name: "Holy Saturday",
+        nameEs: "Sábado Santo",
+        legalReference: "Customary closure (not Article 74)"
+      }
+    );
+  }
+
   return holidays.sort((left, right) => left.date.localeCompare(right.date));
 }
 
@@ -151,19 +217,21 @@ function getHolidayDates(year) {
  * not generated here because they depend on the applicable federal or local
  * electoral law and election cycle, rather than on a permanent annual rule.
  */
-function getHolidays(year) {
-  return getHolidayDates(year);
+function getHolidays(year, options) {
+  return getHolidayDates(year, options);
 }
 
-function isHoliday(date) {
+function isHoliday(date, options) {
   const parts = parseDateParts(date);
   const key = dateKey(parts.year, parts.month, parts.day);
 
-  return getHolidayDates(parts.year).some((holiday) => holiday.date === key);
+  return getHolidayDates(parts.year, options).some(
+    (holiday) => holiday.date === key
+  );
 }
 
 function getWeekendDays(options) {
-  const weekendDays = options.weekendDays ?? DEFAULT_WEEKEND_DAYS;
+  const weekendDays = options?.weekendDays ?? DEFAULT_WEEKEND_DAYS;
 
   if (
     !Array.isArray(weekendDays) ||
@@ -182,9 +250,9 @@ function isBusinessDay(date, options = {}) {
   const weekday = new Date(
     Date.UTC(parts.year, parts.month - 1, parts.day)
   ).getUTCDay();
-  const weekendDays = getWeekendDays(options);
+  const weekendDays = normalizeOptions(options).weekendDays;
 
-  return !weekendDays.has(weekday) && !isHoliday(date);
+  return !weekendDays.has(weekday) && !isHoliday(date, options);
 }
 
 module.exports = {

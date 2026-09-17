@@ -36,6 +36,31 @@ test("movable holidays are recalculated for another year", () => {
   );
 });
 
+test("Holy Week can be included as an optional customary closure", () => {
+  assert.deepEqual(
+    getHolidays(2026, { includeHolyWeek: true })
+      .filter((holiday) => holiday.nameEs.endsWith("Santo"))
+      .map((holiday) => holiday.date),
+    ["2026-04-03", "2026-04-04"]
+  );
+
+  assert.equal(isHoliday("2026-04-03"), false);
+  assert.equal(isHoliday("2026-04-03", { includeHolyWeek: true }), true);
+  assert.equal(isHoliday("2026-04-04", { includeHolyWeek: true }), true);
+  assert.equal(isBusinessDay("2026-04-03"), true);
+  assert.equal(
+    isBusinessDay("2026-04-03", { includeHolyWeek: true }),
+    false
+  );
+  assert.equal(
+    isBusinessDay("2026-04-04", {
+      includeHolyWeek: true,
+      weekendDays: []
+    }),
+    false
+  );
+});
+
 test("the presidential transition holiday occurs every six years", () => {
   assert.equal(isHoliday("2024-10-01"), true);
   assert.equal(isHoliday("2026-10-01"), false);
@@ -93,4 +118,8 @@ test("invalid inputs produce useful errors", () => {
   assert.throws(() => getHolidays(2027.5), /year must be an integer/);
   assert.throws(() => isHoliday("2027-02-30"), /invalid calendar date/);
   assert.throws(() => isBusinessDay("02\/01\/2027"), /YYYY-MM-DD/);
+  assert.throws(
+    () => isHoliday("2027-03-26", { includeHolyWeek: "yes" }),
+    /includeHolyWeek must be a boolean/
+  );
 });
