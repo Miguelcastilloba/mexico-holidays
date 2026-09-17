@@ -157,13 +157,18 @@ function isHoliday(date) {
   return getHolidayDates(parts.year).some((holiday) => holiday.date === key);
 }
 
-function isBusinessDay(date) {
+function isBusinessDay(date, options = {}) {
   const parts = parseDateParts(date);
   const weekday = new Date(
     Date.UTC(parts.year, parts.month - 1, parts.day)
   ).getUTCDay();
+  const sundayIsBusinessDay = options.sundayIsBusinessDay === true;
 
-  return weekday !== 0 && weekday !== 6 && !isHoliday(date);
+  return (
+    (weekday !== 0 || sundayIsBusinessDay) &&
+    weekday !== 6 &&
+    !isHoliday(date)
+  );
 }
 
 module.exports = {

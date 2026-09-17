@@ -53,7 +53,27 @@ test("isBusinessDay excludes weekends and federal holidays", () => {
   assert.equal(isBusinessDay("2027-02-01"), false);
   assert.equal(isBusinessDay("2027-02-02"), true);
   assert.equal(isBusinessDay("2027-02-06"), false);
+  assert.equal(isBusinessDay("2027-02-07"), false);
   assert.equal(isBusinessDay("2027-02-05"), true);
+});
+
+test("isBusinessDay can treat Sundays as business days", () => {
+  assert.equal(
+    isBusinessDay("2027-02-07", { sundayIsBusinessDay: true }),
+    true
+  );
+  assert.equal(
+    isBusinessDay("2027-02-06", { sundayIsBusinessDay: true }),
+    false
+  );
+  assert.equal(
+    isBusinessDay("2027-12-26", { sundayIsBusinessDay: true }),
+    true
+  );
+  assert.equal(
+    isBusinessDay("2023-01-01", { sundayIsBusinessDay: true }),
+    false
+  );
 });
 
 test("invalid inputs produce useful errors", () => {
