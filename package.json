@@ -1,0 +1,44 @@
+{
+  "name": "mexico-holidays",
+  "version": "0.1.0",
+  "description": "Federal Labor Law Article 74 holidays and business-day helpers for Mexico.",
+  "author": "Miguel Castilloba",
+  "homepage": "https://github.com/Miguelcastilloba/mexico-holidays#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Miguelcastilloba/mexico-holidays.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Miguelcastilloba/mexico-holidays/issues"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.cjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "mexico",
+    "holidays",
+    "business-days",
+    "labor-law",
+    "article-74",
+    "feriados"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
