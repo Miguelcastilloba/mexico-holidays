@@ -33,6 +33,11 @@ getHolidays(2027);
 isHoliday("2027-02-01"); // true
 isBusinessDay("2027-02-01"); // false
 isBusinessDay("2027-02-02"); // true
+
+// Include the customary Holy Week closures in addition to federal holidays.
+getHolidays(2027, { includeHolyWeek: true });
+isHoliday("2027-03-26", { includeHolyWeek: true }); // Good Friday
+isBusinessDay("2027-03-26", { includeHolyWeek: true }); // false
 ```
 
 The functions accept either a `YYYY-MM-DD` string or a JavaScript `Date`.
@@ -50,6 +55,8 @@ Date-only strings are interpreted as calendar dates. `Date` values are converted
 - December 25
 
 Article 74(IX) also refers to ordinary election days. Those dates depend on the applicable federal or local electoral law and election cycle, so they are not invented by this package. Add them in your application when the competent electoral authority publishes them.
+
+Holy Week is not a federal mandatory-rest period under Article 74. Pass `{ includeHolyWeek: true }` to `getHolidays`, `isHoliday`, or `isBusinessDay` when your organization observes the customary closures on Good Friday and Holy Saturday. The option is disabled by default and the dates are calculated from Gregorian Easter.
 
 This package does not include company closures, school holidays, banking calendars, vacations, or state-specific holidays.
 
