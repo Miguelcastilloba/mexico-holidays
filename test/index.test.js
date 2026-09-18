@@ -61,6 +61,34 @@ test("Holy Week can be included as an optional customary closure", () => {
   );
 });
 
+test("date output keeps the documented YYYY-MM-DD format for all valid years", () => {
+  assert.equal(getHolidays(1)[0].date.length, 10);
+  assert.equal(isHoliday("0001-01-01"), true);
+});
+
+test("Holy Week dates preserve the holiday shape across month boundaries", () => {
+  const holyWeek = getHolidays(2018, { includeHolyWeek: true }).filter(
+    (holiday) =>
+      holiday.name === "Good Friday" || holiday.name === "Holy Saturday"
+  );
+
+  assert.deepEqual(
+    holyWeek.map((holiday) => holiday.date),
+    ["2018-03-30", "2018-03-31"]
+  );
+  assert.deepEqual(Object.keys(holyWeek[0]), [
+    "date",
+    "name",
+    "nameEs",
+    "legalReference"
+  ]);
+  assert.equal(isHoliday("2018-03-30", { includeHolyWeek: true }), true);
+  assert.equal(
+    isBusinessDay("2018-03-30", { includeHolyWeek: true }),
+    false
+  );
+});
+
 test("the presidential transition holiday occurs every six years", () => {
   assert.equal(isHoliday("2024-10-01"), true);
   assert.equal(isHoliday("2026-10-01"), false);

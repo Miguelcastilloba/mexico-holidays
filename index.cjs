@@ -15,7 +15,10 @@ function assertValidYear(year) {
 }
 
 function dateKey(year, month, day) {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(
+    2,
+    "0"
+  )}-${String(day).padStart(2, "0")}`;
 }
 
 function dateKeyFromMonthDay(year, monthDay) {
@@ -23,9 +26,25 @@ function dateKeyFromMonthDay(year, monthDay) {
   return dateKey(year, month, day);
 }
 
+function createUtcDate(year, month, day) {
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  return date;
+}
+
+function dateKeyWithOffset(year, month, day, offsetDays) {
+  const date = createUtcDate(year, month, day + offsetDays);
+
+  return dateKey(
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate()
+  );
+}
+
 function nthWeekdayOfMonth(year, month, weekday, occurrence) {
   // JavaScript weekdays: Sunday = 0, Monday = 1, ..., Saturday = 6.
-  const firstDay = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const firstDay = createUtcDate(year, month, 1).getUTCDay();
   const day = 1 + ((weekday - firstDay + 7) % 7) + (occurrence - 1) * 7;
 
   return dateKey(year, month, day);
@@ -73,7 +92,7 @@ function normalizeOptions(options) {
 
   return {
     includeHolyWeek: options.includeHolyWeek === true,
-    weekendDays: getWeekendDays(options)
+    weekendDays: normalizeWeekendDays(options.weekendDays)
   };
 }
 
@@ -87,7 +106,7 @@ function parseDateOnlyString(value) {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  const candidate = new Date(Date.UTC(year, month - 1, day));
+  const candidate = createUtcDate(year, month, day);
 
   if (
     candidate.getUTCFullYear() !== year ||
@@ -128,9 +147,11 @@ function parseDateParts(date) {
 }
 
 function getHolidayDates(year, options) {
-  assertValidYear(year);
-  const normalizedOptions = normalizeOptions(options);
+  return buildHolidayDates(year, normalizeOptions(options));
+}
 
+function buildHolidayDates(year, normalizedOptions) {
+  assertValidYear(year);
   const holidays = [];
 
   const addHoliday = (monthDay, name, nameEs, legalReference) => {
@@ -193,13 +214,23 @@ function getHolidayDates(year, options) {
 
     holidays.push(
       {
-        date: dateKey(year, easterSunday.month, easterSunday.day - 2),
+        date: dateKeyWithOffset(
+          year,
+          easterSunday.month,
+          easterSunday.day,
+          -2
+        ),
         name: "Good Friday",
         nameEs: "Viernes Santo",
         legalReference: "Customary closure (not Article 74)"
       },
       {
-        date: dateKey(year, easterSunday.month, easterSunday.day - 1),
+        date: dateKeyWithOffset(
+          year,
+          easterSunday.month,
+          easterSunday.day,
+          -1
+        ),
         name: "Holy Saturday",
         nameEs: "Sábado Santo",
         legalReference: "Customary closure (not Article 74)"
@@ -224,15 +255,14 @@ function getHolidays(year, options) {
 function isHoliday(date, options) {
   const parts = parseDateParts(date);
   const key = dateKey(parts.year, parts.month, parts.day);
+  const normalizedOptions = normalizeOptions(options);
 
-  return getHolidayDates(parts.year, options).some(
+  return buildHolidayDates(parts.year, normalizedOptions).some(
     (holiday) => holiday.date === key
   );
 }
 
-function getWeekendDays(options) {
-  const weekendDays = options?.weekendDays ?? DEFAULT_WEEKEND_DAYS;
-
+function normalizeWeekendDays(weekendDays = DEFAULT_WEEKEND_DAYS) {
   if (
     !Array.isArray(weekendDays) ||
     weekendDays.some((day) => !Object.hasOwn(WEEKDAY_NUMBERS, day))
@@ -247,12 +277,16 @@ function getWeekendDays(options) {
 
 function isBusinessDay(date, options = {}) {
   const parts = parseDateParts(date);
-  const weekday = new Date(
-    Date.UTC(parts.year, parts.month - 1, parts.day)
-  ).getUTCDay();
-  const weekendDays = normalizeOptions(options).weekendDays;
+  const weekday = createUtcDate(parts.year, parts.month, parts.day).getUTCDay();
+  const key = dateKey(parts.year, parts.month, parts.day);
+  const normalizedOptions = normalizeOptions(options);
 
-  return !weekendDays.has(weekday) && !isHoliday(date, options);
+  return (
+    !normalizedOptions.weekendDays.has(weekday) &&
+    !buildHolidayDates(parts.year, normalizedOptions).some(
+      (holiday) => holiday.date === key
+    )
+  );
 }
 
 module.exports = {
