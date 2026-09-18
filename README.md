@@ -44,6 +44,10 @@ isBusinessDay("2027-03-26", { includeHolyWeek: true }); // false
 
 The functions accept either a `YYYY-MM-DD` string or a JavaScript `Date`.
 Date-only strings are interpreted as calendar dates. `Date` values are converted using `America/Mexico_City`.
+All three functions accept the same optional second argument. Set
+`includeHolyWeek: true` to include Good Friday and Holy Saturday in holiday
+calculations. The `weekendDays` option affects only `isBusinessDay`, because
+weekends are not holiday records returned by `getHolidays` or `isHoliday`.
 By default, Saturdays and Sundays are not business days. Pass a `weekendDays`
 array to `isBusinessDay` to customize this: use `["saturday"]` for Saturdays
 only, `["sunday"]` for Sundays only, or `["saturday", "sunday"]` for both.
